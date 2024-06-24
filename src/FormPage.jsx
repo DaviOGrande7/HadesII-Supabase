@@ -2,14 +2,17 @@ import { useState } from 'react';
 import { Card, Button, Label, TextInput, Select } from 'flowbite-react';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient("https://gdehsouqjqdgjwlbxkbz.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkZWhzb3VxanFkZ2p3bGJ4a2J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc0MzUzNjksImV4cCI6MjAzMzAxMTM2OX0.GA-DWbB-9MpWaHuFioblPRaxPeF4y8osngwOty6Dssw");
+const supabase = createClient(
+  "https://gdehsouqjqdgjwlbxkbz.supabase.co", 
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdkZWhzb3VxanFkZ2p3bGJ4a2J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc0MzUzNjksImV4cCI6MjAzMzAxMTM2OX0.GA-DWbB-9MpWaHuFioblPRaxPeF4y8osngwOty6Dssw"
+);
 
 function FormPage({ locations }) {
   const [formData, setFormData] = useState({
     name: '',
     title: '',
     keepsake: '',
-    location: '',
+    location_name: '',  // Ensure this matches the name of your state property
     codex_portrait: '',
     quote: ''
   });
@@ -18,27 +21,36 @@ function FormPage({ locations }) {
     setFormData({ ...formData, [e.target.id]: e.target.value });
   };
 
+  const handleLocationChange = (e) => {
+    setFormData({ ...formData, location_name: e.target.value });  // Update location_name specifically
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      const { data, error } = await supabase.from('characters').insert([formData]);
+      const { data, error } = await supabase.rpc('post_char', {
+        character_data: formData
+      });
+
       if (error) {
-        console.error('Error inserting data:', error);
+        console.error('Error inserting data:', error.message);
+        alert('Error inserting data: ' + error.message);
       } else {
         console.log('Data inserted successfully:', data);
-        // Limpar o formulário após o envio bem-sucedido
+        alert('Data inserted successfully!');
         setFormData({
           name: '',
           title: '',
           keepsake: '',
-          location: '',
+          location_name: '',
           codex_portrait: '',
           quote: ''
         });
       }
     } catch (error) {
       console.error('Error inserting data:', error.message);
+      alert('Error inserting data: ' + error.message);
     }
   };
 
@@ -66,9 +78,10 @@ function FormPage({ locations }) {
           </div>
           <div>
             <div className="mb-2 block">
-              <Label htmlFor="location" value="Location" />
+              <Label htmlFor="location_name" value="Location" />
             </div>
-            <Select id="location" value={formData.location} onChange={handleChange} required>
+            <Select id="location_name" value={formData.location_name} onChange={handleLocationChange} required>
+              <option value="">Select Location</option> {/* Optional: Provide a default option */}
               {locations.map((location, index) => (
                 <option key={index} value={location.name}>{location.name}</option>
               ))}
